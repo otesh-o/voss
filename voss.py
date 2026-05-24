@@ -3,10 +3,16 @@ from ear import listen
 from memory import add_to_history, get_history
 from mouth import speak
 from provider import generate_reply
+from tools.router import handle_tool_request
 
 
 def think(user_input: str) -> str:
     add_to_history("user", user_input)
+
+    tool_reply = handle_tool_request(user_input)
+    if tool_reply is not None:
+        add_to_history("assistant", tool_reply)
+        return tool_reply
 
     reply = generate_reply(get_full_context(), get_history())
     add_to_history("assistant", reply)
