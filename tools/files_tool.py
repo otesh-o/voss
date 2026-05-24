@@ -1,6 +1,13 @@
+from datetime import datetime
 from pathlib import Path
 
-from config import MAX_FILE_READ_CHARS, MAX_SEARCH_RESULTS, WORKSPACE_ROOT, get_allowed_roots
+from config import (
+    MAX_FILE_READ_CHARS,
+    MAX_RECENT_ACTIVITY_RESULTS,
+    MAX_SEARCH_RESULTS,
+    WORKSPACE_ROOT,
+    get_allowed_roots,
+)
 
 
 def _label_for_path(path: Path) -> str:
@@ -126,3 +133,35 @@ def create_file(user_path: str, content: str = "", overwrite: bool = False) -> s
     if content:
         return f"Created {_label_for_path(target)}."
     return f"Created empty file {_label_for_path(target)}."
+
+
+def create_directory(user_path: str) -> str:
+    target = _resolve_workspace_path(user_path)
+    target.mkdir(parents=True, exist_ok=True)
+    return f"Created directory {_label_for_path(target)}."
+
+
+def recent_activity_snapshot(limit: int = MAX_RECENT_ACTIVITY_RESULTS) -> str:
+    candidates: list[tuple[float, Path]] = []
+
+    for root in get_allowed_roots():
+        for path in root.rglob("*"):
+            if not path.is_file():
+                continue
+            if ".git" in path.parts or "__pycache__" in path.parts:
+                continue
+            try:
+                modified_at = path.stat().st_mtime
+            except OSError:
+                continue
+            candidates.append((modified_at, path))
+
+    if not candidates:
+        return "No recent file activity found."
+
+    candidates.sort(key=lambda item: item[0], reverse=True)
+    lines = ["Recent file activity:"]
+    for modified_at, path in candidates[:limit]:
+        timestamp = datetime.fromtimestamp(modified_at).strftime("%Y-%m-%d %H:%M")
+        lines.append(f"{timestamp} | {_label_for_path(path)}")
+    return "\n".join(lines)

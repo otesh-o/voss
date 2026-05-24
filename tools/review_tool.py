@@ -1,4 +1,5 @@
 from agenda import list_open_commitments
+from tools.files_tool import recent_activity_snapshot
 
 
 URGENT_TIME_REFERENCES = {
@@ -66,5 +67,7 @@ def build_operating_review() -> str:
             lines.append(f"{item['id']} | {item['title']} | {item.get('time_reference') or 'unspecified'}")
     else:
         lines.append("High priority: none.")
+
+    lines.append(recent_activity_snapshot(limit=6))
 
     return "\n".join(lines)

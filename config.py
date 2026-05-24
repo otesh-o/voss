@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 
 
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "your key here")
@@ -31,6 +32,10 @@ MAX_MEMORY_ENTRIES = 200
 MAX_WEB_RESULTS = 5
 MAX_WEB_TEXT_CHARS = 5000
 MAX_AGENDA_ITEMS = 200
+MAX_RECENT_ACTIVITY_RESULTS = 12
+REMINDER_COOLDOWN_MINUTES = 120
+VOSS_TIMEZONE = os.getenv("VOSS_TIMEZONE", "Africa/Lagos")
+NOTIFICATIONS_ENABLED = os.getenv("VOSS_NOTIFICATIONS_ENABLED", "1").strip() not in {"0", "false", "False"}
 TEXT_FILE_SUFFIXES = {
     ".txt",
     ".md",
@@ -45,6 +50,14 @@ TEXT_FILE_SUFFIXES = {
 
 def current_timestamp() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+def current_local_datetime() -> datetime:
+    try:
+        tz = ZoneInfo(VOSS_TIMEZONE)
+    except Exception:
+        tz = timezone.utc
+    return datetime.now(tz)
 
 
 def get_allowed_roots() -> list[Path]:

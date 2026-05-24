@@ -1,6 +1,7 @@
 import re
 
 from agenda import agenda_snapshot, filter_agenda_by_time, list_open_commitments, update_agenda_status
+from reminder import due_reminders_snapshot
 
 
 def answer_agenda_request(user_input: str) -> str | None:
@@ -19,6 +20,9 @@ def answer_agenda_request(user_input: str) -> str | None:
 
     if lowered in {"show my agenda", "show agenda", "list agenda", "what is on my agenda"}:
         return agenda_snapshot()
+
+    if lowered in {"show reminders", "list reminders", "what reminders are due", "what should you remind me about"}:
+        return due_reminders_snapshot()
 
     time_match = re.match(r"(?is)^what did i say i would finish (.+)$", text)
     if time_match:
