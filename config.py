@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from datetime import datetime, timezone
 
 
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "your key here")
@@ -21,6 +22,9 @@ MAX_SEARCH_RESULTS = 10
 MAX_KNOWLEDGE_RESULTS = 5
 KNOWLEDGE_PREVIEW_CHARS = 700
 MAX_MEMORY_ENTRIES = 200
+MAX_WEB_RESULTS = 5
+MAX_WEB_TEXT_CHARS = 5000
+MAX_AGENDA_ITEMS = 200
 TEXT_FILE_SUFFIXES = {
     ".txt",
     ".md",
@@ -31,3 +35,7 @@ TEXT_FILE_SUFFIXES = {
     ".toml",
     ".csv",
 }
+
+
+def current_timestamp() -> str:
+    return datetime.now(timezone.utc).isoformat()

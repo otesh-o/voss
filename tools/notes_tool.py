@@ -103,13 +103,13 @@ def summarize_file(user_path: str) -> str:
     if not lines:
         return f"{user_path} is empty."
 
-    head = lines[:5]
-    tail = lines[-3:] if len(lines) > 6 else []
-    summary_lines = [f"Summary of {target.relative_to(WORKSPACE_ROOT)}:"]
-    summary_lines.append("Opening lines:")
-    summary_lines.extend(head)
+    head = lines[:12]
+    tail = lines[-6:] if len(lines) > 18 else []
+    raw_lines = [f"File: {target.relative_to(WORKSPACE_ROOT)}"]
+    raw_lines.append(f"Approximate size: {len(content)} characters")
+    raw_lines.append("Opening excerpt:")
+    raw_lines.extend(head)
     if tail:
-        summary_lines.append("Closing lines:")
-        summary_lines.extend(tail)
-    summary_lines.append(f"Approximate size: {len(content)} characters.")
-    return "\n".join(summary_lines)
+        raw_lines.append("Closing excerpt:")
+        raw_lines.extend(tail)
+    return "\n".join(raw_lines)
