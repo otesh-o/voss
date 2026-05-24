@@ -1,3 +1,4 @@
+from diagnostics import all_checks_passed, format_startup_report, run_startup_checks
 from context import get_full_context
 from ear import listen
 from memory import add_to_history, get_history, maybe_store_memory
@@ -27,6 +28,12 @@ def think(user_input: str) -> str:
 
 
 def main():
+    checks = run_startup_checks()
+    print(format_startup_report(checks))
+    if not all_checks_passed(checks):
+        print("Voss cannot start until the failed checks are fixed.")
+        return
+
     print("Voss is online.")
     speak("Online.")
 

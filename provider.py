@@ -9,6 +9,30 @@ from config import (
 )
 
 
+def validate_provider_config() -> tuple[bool, str]:
+    provider = AI_PROVIDER
+
+    if provider == "anthropic":
+        if not ANTHROPIC_API_KEY or ANTHROPIC_API_KEY == "your key here":
+            return False, "Missing ANTHROPIC_API_KEY for provider 'anthropic'."
+        return True, f"Provider ready: anthropic ({MODEL})"
+
+    if provider == "openai":
+        if not OPENAI_API_KEY:
+            return False, "Missing OPENAI_API_KEY for provider 'openai'."
+        return True, f"Provider ready: openai ({OPENAI_MODEL})"
+
+    if provider == "openrouter":
+        if not OPENROUTER_API_KEY:
+            return False, "Missing OPENROUTER_API_KEY for provider 'openrouter'."
+        return True, f"Provider ready: openrouter ({OPENROUTER_MODEL})"
+
+    return False, (
+        f"Unsupported VOSS_PROVIDER '{provider}'. "
+        "Use 'anthropic', 'openai', or 'openrouter'."
+    )
+
+
 def _anthropic_reply(system_prompt: str, messages: list[dict]) -> str:
     import anthropic
 
@@ -63,16 +87,14 @@ def _openrouter_reply(system_prompt: str, messages: list[dict]) -> str:
 
 
 def generate_reply(system_prompt: str, messages: list[dict]) -> str:
-    provider = AI_PROVIDER
+    ok, message = validate_provider_config()
+    if not ok:
+        raise RuntimeError(message)
 
-    if provider == "anthropic":
+    if AI_PROVIDER == "anthropic":
         return _anthropic_reply(system_prompt, messages)
-    if provider == "openai":
+    if AI_PROVIDER == "openai":
         return _openai_reply(system_prompt, messages)
-    if provider == "openrouter":
+    if AI_PROVIDER == "openrouter":
         return _openrouter_reply(system_prompt, messages)
-
-    raise RuntimeError(
-        f"Unsupported VOSS_PROVIDER '{provider}'. "
-        "Use 'anthropic', 'openai', or 'openrouter'."
-    )
+    raise RuntimeError(message)
