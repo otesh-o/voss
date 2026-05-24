@@ -1,8 +1,9 @@
 from context import get_full_context
 from ear import listen
-from memory import add_to_history, get_history
+from memory import add_to_history, get_history, maybe_store_memory
 from mouth import speak
 from provider import generate_reply
+from tools.notes_tool import get_relevant_knowledge
 from tools.router import handle_tool_request
 
 
@@ -14,8 +15,14 @@ def think(user_input: str) -> str:
         add_to_history("assistant", tool_reply)
         return tool_reply
 
-    reply = generate_reply(get_full_context(), get_history())
+    knowledge = get_relevant_knowledge(user_input)
+    system_prompt = get_full_context()
+    if knowledge:
+        system_prompt = f"{system_prompt}\n\nRELEVANT WORKSPACE KNOWLEDGE:\n{knowledge}"
+
+    reply = generate_reply(system_prompt, get_history())
     add_to_history("assistant", reply)
+    maybe_store_memory(user_input, reply)
     return reply
 
 

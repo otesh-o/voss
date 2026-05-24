@@ -1,7 +1,9 @@
 import re
 
+from tools.approval_tool import approve_action, list_pending_actions, request_copy, request_delete, request_move
 from tools.commands_tool import run_command
 from tools.files_tool import create_file, list_directory, read_file, search_files
+from tools.notes_tool import search_knowledge, summarize_file
 
 
 def _extract_after_prefix(text: str, prefixes: tuple[str, ...]) -> str | None:
@@ -37,6 +39,20 @@ def handle_tool_request(user_input: str) -> str | None:
         if read_target is not None:
             return read_file(read_target)
 
+        knowledge_target = _extract_after_prefix(
+            text,
+            ("search knowledge for ", "search notes for ", "find in notes ", "find in knowledge "),
+        )
+        if knowledge_target is not None:
+            return search_knowledge(knowledge_target)
+
+        summary_target = _extract_after_prefix(
+            text,
+            ("summarize file ", "summarise file ", "summarize note ", "summarise note "),
+        )
+        if summary_target is not None:
+            return summarize_file(summary_target)
+
         create_match = re.match(
             r"(?is)^(?:create|make)\s+file\s+(.+?)(?:\s+with\s+content\s*:\s*(.+))?$",
             text,
@@ -54,6 +70,30 @@ def handle_tool_request(user_input: str) -> str | None:
             path = overwrite_match.group(1).strip()
             content = overwrite_match.group(2).strip()
             return create_file(path, content, overwrite=True)
+
+        delete_target = _extract_after_prefix(text, ("delete file ", "delete folder ", "remove file ", "remove folder "))
+        if delete_target is not None:
+            return request_delete(delete_target)
+
+        move_match = re.match(r"(?is)^(?:move|rename)\s+(.+?)\s+to\s+(.+)$", text)
+        if move_match:
+            source = move_match.group(1).strip()
+            target = move_match.group(2).strip()
+            return request_move(source, target)
+
+        copy_match = re.match(r"(?is)^copy\s+(.+?)\s+to\s+(.+)$", text)
+        if copy_match:
+            source = copy_match.group(1).strip()
+            target = copy_match.group(2).strip()
+            return request_copy(source, target)
+
+        approve_target = _extract_after_prefix(text, ("approve action ",))
+        if approve_target is not None:
+            return approve_action(approve_target)
+
+        pending_target = _extract_after_prefix(text, ("list pending actions", "show pending actions"))
+        if pending_target is not None or text.lower() in {"pending actions", "list pending", "show pending"}:
+            return list_pending_actions()
 
         command_text = _extract_after_prefix(
             text,

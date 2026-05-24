@@ -18,3 +18,16 @@ OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "openai/gpt-5-mini")
 WORKSPACE_ROOT = Path(os.getenv("VOSS_WORKSPACE_ROOT", Path(__file__).resolve().parent))
 MAX_FILE_READ_CHARS = 8000
 MAX_SEARCH_RESULTS = 10
+MAX_KNOWLEDGE_RESULTS = 5
+KNOWLEDGE_PREVIEW_CHARS = 700
+MAX_MEMORY_ENTRIES = 200
+TEXT_FILE_SUFFIXES = {
+    ".txt",
+    ".md",
+    ".py",
+    ".json",
+    ".yaml",
+    ".yml",
+    ".toml",
+    ".csv",
+}
