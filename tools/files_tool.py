@@ -1,11 +1,24 @@
 from pathlib import Path
 
-from config import MAX_FILE_READ_CHARS, MAX_SEARCH_RESULTS, WORKSPACE_ROOT
+from config import MAX_FILE_READ_CHARS, MAX_SEARCH_RESULTS, WORKSPACE_ROOT, get_allowed_roots
+
+
+def _label_for_path(path: Path) -> str:
+    for root in get_allowed_roots():
+        try:
+            relative = path.resolve().relative_to(root.resolve())
+            root_name = root.name or str(root)
+            if str(relative):
+                return f"{root_name}/{relative}".replace("\\", "/")
+            return root_name
+        except ValueError:
+            continue
+    return str(path)
 
 
 def _resolve_workspace_path(user_path: str | None = None) -> Path:
+    allowed_roots = get_allowed_roots()
     base_path = WORKSPACE_ROOT.resolve()
-
     if not user_path or user_path.strip() in {".", ""}:
         return base_path
 
@@ -14,12 +27,27 @@ def _resolve_workspace_path(user_path: str | None = None) -> Path:
         candidate = base_path / candidate
 
     resolved = candidate.resolve()
-    try:
-        resolved.relative_to(base_path)
-    except ValueError as exc:
-        raise ValueError("Path must stay inside the Voss workspace.") from exc
 
-    return resolved
+    for root in allowed_roots:
+        try:
+            resolved.relative_to(root.resolve())
+            return resolved
+        except ValueError:
+            continue
+
+    raise ValueError("Path must stay inside an allowed Voss root.")
+
+
+def allowed_roots_snapshot() -> str:
+    roots = get_allowed_roots()
+    if not roots:
+        return "No allowed roots are configured."
+
+    lines = ["Allowed roots:"]
+    for root in roots:
+        lines.append(str(root))
+    return "\n".join(lines)
+
 
 
 def search_files(query: str) -> str:
@@ -29,11 +57,14 @@ def search_files(query: str) -> str:
     matches: list[Path] = []
     query_lower = query.lower()
 
-    for path in WORKSPACE_ROOT.rglob("*"):
-        if ".git" in path.parts:
-            continue
-        if query_lower in path.name.lower():
-            matches.append(path)
+    for root in get_allowed_roots():
+        for path in root.rglob("*"):
+            if ".git" in path.parts:
+                continue
+            if query_lower in path.name.lower():
+                matches.append(path)
+            if len(matches) >= MAX_SEARCH_RESULTS:
+                break
         if len(matches) >= MAX_SEARCH_RESULTS:
             break
 
@@ -42,15 +73,14 @@ def search_files(query: str) -> str:
 
     lines = [f"Found {len(matches)} match(es):"]
     for match in matches:
-        lines.append(str(match.relative_to(WORKSPACE_ROOT)))
+        lines.append(_label_for_path(match))
     return "\n".join(lines)
 
 
 def list_directory(user_path: str | None = None) -> str:
     target = _resolve_workspace_path(user_path)
     items = sorted(target.iterdir(), key=lambda item: (item.is_file(), item.name.lower()))
-    relative = target.relative_to(WORKSPACE_ROOT)
-    label = str(relative) if str(relative) else "."
+    label = _label_for_path(target)
 
     if not items:
         return f"{label} is empty."
@@ -81,8 +111,7 @@ def read_file(user_path: str) -> str:
     if len(text) > MAX_FILE_READ_CHARS:
         text = text[:MAX_FILE_READ_CHARS] + "\n\n[truncated]"
 
-    relative = target.relative_to(WORKSPACE_ROOT)
-    return f"Contents of {relative}:\n{text}"
+    return f"Contents of {_label_for_path(target)}:\n{text}"
 
 
 def create_file(user_path: str, content: str = "", overwrite: bool = False) -> str:
@@ -94,7 +123,6 @@ def create_file(user_path: str, content: str = "", overwrite: bool = False) -> s
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(content, encoding="utf-8")
 
-    relative = target.relative_to(WORKSPACE_ROOT)
     if content:
-        return f"Created {relative}."
-    return f"Created empty file {relative}."
+        return f"Created {_label_for_path(target)}."
+    return f"Created empty file {_label_for_path(target)}."

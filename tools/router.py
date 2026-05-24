@@ -2,10 +2,11 @@ from dataclasses import dataclass
 import re
 
 from tools.approval_tool import approve_action, list_pending_actions, request_copy, request_delete, request_move
-from tools.agenda_tool import answer_agenda_request, get_agenda_context
+from tools.agenda_tool import answer_agenda_request
 from tools.commands_tool import run_command
-from tools.files_tool import create_file, list_directory, read_file, search_files
+from tools.files_tool import allowed_roots_snapshot, create_file, list_directory, read_file, search_files
 from tools.notes_tool import search_knowledge, summarize_file
+from tools.review_tool import build_operating_review
 from tools.web_tool import fetch_page, search_web, summarize_page
 
 
@@ -40,6 +41,30 @@ def handle_tool_request(user_input: str) -> ToolResult | None:
             return _context_result(
                 agenda_reply,
                 "Use this agenda state to answer the user's scheduling or commitment question.",
+            )
+
+        if text.lower() in {
+            "what matters right now",
+            "what am i neglecting",
+            "what looks urgent",
+            "give me an operating review",
+            "operating review",
+            "what should i focus on next",
+        }:
+            return _context_result(
+                build_operating_review(),
+                "Use this operating review to tell the user what deserves attention and why.",
+            )
+
+        if text.lower() in {
+            "show allowed roots",
+            "what folders can you access",
+            "what paths can you access",
+            "where can you look",
+        }:
+            return _context_result(
+                allowed_roots_snapshot(),
+                "Use this allowed-root list to answer where Voss can currently read and work.",
             )
 
         search_term = _extract_after_prefix(

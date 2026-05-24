@@ -17,6 +17,12 @@ OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-5.4-mini")
 OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "openai/gpt-5-mini")
 
 WORKSPACE_ROOT = Path(os.getenv("VOSS_WORKSPACE_ROOT", Path(__file__).resolve().parent))
+DEFAULT_ALLOWED_ROOTS = [
+    WORKSPACE_ROOT,
+    Path.home() / "Documents",
+    Path.home() / "Downloads",
+    Path.home() / "Desktop",
+]
 MAX_FILE_READ_CHARS = 8000
 MAX_SEARCH_RESULTS = 10
 MAX_KNOWLEDGE_RESULTS = 5
@@ -39,3 +45,21 @@ TEXT_FILE_SUFFIXES = {
 
 def current_timestamp() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+def get_allowed_roots() -> list[Path]:
+    env_value = os.getenv("VOSS_ALLOWED_ROOTS", "").strip()
+    if env_value:
+        roots = [Path(part.strip()) for part in env_value.split(";") if part.strip()]
+    else:
+        roots = DEFAULT_ALLOWED_ROOTS
+
+    unique_roots: list[Path] = []
+    seen: set[str] = set()
+    for root in roots:
+        resolved = root.resolve()
+        key = str(resolved).lower()
+        if key not in seen and resolved.exists():
+            seen.add(key)
+            unique_roots.append(resolved)
+    return unique_roots

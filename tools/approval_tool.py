@@ -3,7 +3,7 @@ from pathlib import Path
 import shutil
 
 from config import WORKSPACE_ROOT
-from tools.files_tool import _resolve_workspace_path
+from tools.files_tool import _label_for_path, _resolve_workspace_path
 
 
 @dataclass
@@ -40,8 +40,7 @@ def request_delete(user_path: str) -> str:
 
     action_id = _next_action_id()
     _pending_actions[action_id] = PendingAction(action_id, "delete", target)
-    relative = target.relative_to(WORKSPACE_ROOT)
-    return f"Pending delete {action_id}: {relative}. Say 'approve action {action_id}' to proceed."
+    return f"Pending delete {action_id}: {_label_for_path(target)}. Say 'approve action {action_id}' to proceed."
 
 
 def request_move(source_path: str, target_path: str) -> str:
@@ -57,8 +56,8 @@ def request_move(source_path: str, target_path: str) -> str:
     action_id = _next_action_id()
     _pending_actions[action_id] = PendingAction(action_id, "move", source, target)
     return (
-        f"Pending move {action_id}: {source.relative_to(WORKSPACE_ROOT)} -> "
-        f"{target.relative_to(WORKSPACE_ROOT)}. Say 'approve action {action_id}' to proceed."
+        f"Pending move {action_id}: {_label_for_path(source)} -> "
+        f"{_label_for_path(target)}. Say 'approve action {action_id}' to proceed."
     )
 
 
@@ -75,8 +74,8 @@ def request_copy(source_path: str, target_path: str) -> str:
     action_id = _next_action_id()
     _pending_actions[action_id] = PendingAction(action_id, "copy", source, target)
     return (
-        f"Pending copy {action_id}: {source.relative_to(WORKSPACE_ROOT)} -> "
-        f"{target.relative_to(WORKSPACE_ROOT)}. Say 'approve action {action_id}' to proceed."
+        f"Pending copy {action_id}: {_label_for_path(source)} -> "
+        f"{_label_for_path(target)}. Say 'approve action {action_id}' to proceed."
     )
 
 
@@ -87,11 +86,11 @@ def list_pending_actions() -> str:
     lines = ["Pending actions:"]
     for action in _pending_actions.values():
         if action.target is None:
-            lines.append(f"{action.action_id}: {action.action_type} {action.source.relative_to(WORKSPACE_ROOT)}")
+            lines.append(f"{action.action_id}: {action.action_type} {_label_for_path(action.source)}")
         else:
             lines.append(
                 f"{action.action_id}: {action.action_type} "
-                f"{action.source.relative_to(WORKSPACE_ROOT)} -> {action.target.relative_to(WORKSPACE_ROOT)}"
+                f"{_label_for_path(action.source)} -> {_label_for_path(action.target)}"
             )
     return "\n".join(lines)
 
@@ -106,15 +105,15 @@ def approve_action(action_id: str) -> str:
             shutil.rmtree(action.source)
         else:
             action.source.unlink()
-        return f"Deleted {action.source.relative_to(WORKSPACE_ROOT)}."
+        return f"Deleted {_label_for_path(action.source)}."
 
     if action.action_type == "move":
         assert action.target is not None
         action.target.parent.mkdir(parents=True, exist_ok=True)
         shutil.move(str(action.source), str(action.target))
         return (
-            f"Moved {action.source.relative_to(WORKSPACE_ROOT)} "
-            f"to {action.target.relative_to(WORKSPACE_ROOT)}."
+            f"Moved {_label_for_path(action.source)} "
+            f"to {_label_for_path(action.target)}."
         )
 
     if action.action_type == "copy":
@@ -125,8 +124,8 @@ def approve_action(action_id: str) -> str:
         else:
             shutil.copy2(action.source, action.target)
         return (
-            f"Copied {action.source.relative_to(WORKSPACE_ROOT)} "
-            f"to {action.target.relative_to(WORKSPACE_ROOT)}."
+            f"Copied {_label_for_path(action.source)} "
+            f"to {_label_for_path(action.target)}."
         )
 
     return f"Unsupported action type: {action.action_type}"
