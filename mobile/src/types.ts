@@ -48,3 +48,18 @@ export type ChatResponse = {
   reminders: string[];
   captured_commitment?: AgendaItem | null;
 };
+
+export type TranscribeResponse = {
+  text: string;
+};
+
+export type RegisterDeviceRequest = {
+  push_token: string;
+  platform: string;
+  device_name: string;
+};
+
+export type RuntimeResponse = {
+  background_active: boolean;
+  reminder_interval_seconds: number;
+};

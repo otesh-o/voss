@@ -82,6 +82,14 @@ def get_due_reminder_items() -> list[dict]:
     return [dict(item) for item in due_items]
 
 
+def preview_due_reminder_messages() -> list[str]:
+    messages: list[str] = []
+    for item in get_due_reminder_items():
+        time_ref = item.get("time_reference") or "soon"
+        messages.append(f"Reminder. {item['title']}. Time reference: {time_ref}.")
+    return messages
+
+
 def collect_due_reminders() -> list[str]:
     now = current_local_datetime()
     state = _load_state()

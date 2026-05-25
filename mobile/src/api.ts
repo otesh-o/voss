@@ -4,7 +4,10 @@ import type {
   HealthState,
   HistoryResponse,
   ModeResponse,
+  RegisterDeviceRequest,
   RemindersResponse,
+  RuntimeResponse,
+  TranscribeResponse,
 } from "./types";
 
 function normalizeBaseUrl(baseUrl: string) {
@@ -39,6 +42,10 @@ export function fetchHistory(baseUrl: string) {
   return getJson<HistoryResponse>(baseUrl, "/api/history");
 }
 
+export function fetchRuntime(baseUrl: string) {
+  return getJson<RuntimeResponse>(baseUrl, "/api/runtime");
+}
+
 export function setVossMode(baseUrl: string, mode: string) {
   return getJson<ModeResponse>(baseUrl, "/api/mode", {
     method: "POST",
@@ -56,5 +63,29 @@ export function chatWithVoss(baseUrl: string, message: string) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ message }),
+  });
+}
+
+export function registerDevice(baseUrl: string, payload: RegisterDeviceRequest) {
+  return getJson(baseUrl, "/api/devices", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function transcribeAudio(baseUrl: string, audioUri: string) {
+  const formData = new FormData();
+  formData.append("audio", {
+    uri: audioUri,
+    name: "voss-mobile-input.m4a",
+    type: "audio/m4a",
+  } as unknown as Blob);
+
+  return getJson<TranscribeResponse>(baseUrl, "/api/transcribe", {
+    method: "POST",
+    body: formData,
   });
 }

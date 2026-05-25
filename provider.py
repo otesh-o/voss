@@ -4,6 +4,7 @@ from config import (
     MODEL,
     OPENAI_API_KEY,
     OPENAI_MODEL,
+    OPENAI_TRANSCRIPTION_MODEL,
     OPENROUTER_API_KEY,
     OPENROUTER_MODEL,
 )
@@ -98,3 +99,18 @@ def generate_reply(system_prompt: str, messages: list[dict]) -> str:
     if AI_PROVIDER == "openrouter":
         return _openrouter_reply(system_prompt, messages)
     raise RuntimeError(message)
+
+
+def transcribe_audio_file(file_path: str) -> str:
+    from openai import OpenAI
+
+    if not OPENAI_API_KEY:
+        raise RuntimeError("Missing OPENAI_API_KEY for mobile voice transcription.")
+
+    client = OpenAI(api_key=OPENAI_API_KEY)
+    with open(file_path, "rb") as audio_file:
+        transcript = client.audio.transcriptions.create(
+            model=OPENAI_TRANSCRIPTION_MODEL,
+            file=audio_file,
+        )
+    return transcript.text.strip()

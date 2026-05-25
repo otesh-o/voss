@@ -3,7 +3,7 @@ from context import get_full_context
 from diagnostics import all_checks_passed, format_startup_report, run_startup_checks
 from memory import add_to_history, get_history, get_history_snapshot, maybe_store_memory
 from mode import available_modes_data, get_mode, get_mode_instruction
-from notifications import send_notification
+from notifications import send_notification, send_push_notification
 from provider import generate_reply
 from reminder import collect_due_reminders, get_due_reminder_items
 from tools.notes_tool import get_relevant_knowledge
@@ -97,6 +97,7 @@ def collect_and_notify_reminders() -> list[str]:
     reminders = collect_due_reminders()
     for reminder_message in reminders:
         send_notification("Voss Reminder", reminder_message)
+        send_push_notification("Voss Reminder", reminder_message)
     return reminders
 
 

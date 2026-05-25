@@ -7,3 +7,4 @@ requests
 plyer
 fastapi
 uvicorn
+python-multipart
