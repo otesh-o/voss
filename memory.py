@@ -13,6 +13,12 @@ def get_history():
     return conversation_history
 
 
+def get_history_snapshot(limit: int | None = None) -> list[dict]:
+    if limit is None or limit <= 0:
+        return [dict(entry) for entry in conversation_history]
+    return [dict(entry) for entry in conversation_history[-limit:]]
+
+
 def update_living_context(new_information: str):
     living_context_path = Path(__file__).with_name("living_context.txt")
     with living_context_path.open("a", encoding="utf-8") as file:

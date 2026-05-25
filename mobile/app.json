@@ -1,0 +1,23 @@
+{
+  "expo": {
+    "name": "Voss",
+    "slug": "voss-mobile",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#efe4cf"
+      }
+    },
+    "web": {
+      "bundler": "metro"
+    }
+  }
+}

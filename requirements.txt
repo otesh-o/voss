@@ -5,3 +5,5 @@ pyttsx3
 pyaudio
 requests
 plyer
+fastapi
+uvicorn

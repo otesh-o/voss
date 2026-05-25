@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Voss</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <main class="shell">
+    <section class="panel status">
+      <div>
+        <h1>Voss</h1>
+        <p id="health">Checking system status...</p>
+      </div>
+      <div class="mode-box">
+        <span>Mode</span>
+        <strong id="mode">build</strong>
+        <select id="mode-select" aria-label="Voss mode"></select>
+      </div>
+    </section>
+
+    <section class="panel split">
+      <div class="card">
+        <h2>Conversation</h2>
+        <div id="messages" class="messages"></div>
+        <form id="chat-form" class="composer">
+          <textarea id="message-input" rows="3" placeholder="Talk to Voss naturally."></textarea>
+          <button type="submit">Send</button>
+        </form>
+      </div>
+
+      <div class="sidebar">
+        <div class="card">
+          <h2>Agenda</h2>
+          <p id="agenda-count" class="meta">Loading...</p>
+          <pre id="agenda">Loading...</pre>
+        </div>
+        <div class="card">
+          <h2>Reminders</h2>
+          <p id="reminder-count" class="meta">Loading...</p>
+          <pre id="reminders">Loading...</pre>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

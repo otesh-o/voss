@@ -1,65 +1,9 @@
 import sys
 
-from agenda import agenda_snapshot, maybe_capture_commitment
-from diagnostics import all_checks_passed, format_startup_report, run_startup_checks
-from context import get_full_context
+from core import collect_and_notify_reminders, startup_report, think
 from ear import listen
-from memory import add_to_history, get_history, maybe_store_memory
-from mode import get_mode_instruction
 from mouth import speak
-from notifications import send_notification
-from provider import generate_reply
-from reminder import collect_due_reminders
 from selftest import run_self_test
-from tools.notes_tool import get_relevant_knowledge
-from tools.router import ToolResult, handle_tool_request
-
-
-def _build_system_prompt(user_input: str, tool_result: ToolResult | None = None) -> str:
-    system_prompt = get_full_context()
-    system_prompt = f"{system_prompt}\n\n{get_mode_instruction()}"
-
-    knowledge = get_relevant_knowledge(user_input)
-    if knowledge:
-        system_prompt = f"{system_prompt}\n\nRELEVANT WORKSPACE KNOWLEDGE:\n{knowledge}"
-
-    agenda_state = agenda_snapshot()
-    if agenda_state:
-        system_prompt = f"{system_prompt}\n\nAGENDA STATE:\n{agenda_state}"
-
-    if tool_result and tool_result.mode == "context":
-        system_prompt = (
-            f"{system_prompt}\n\n"
-            "TOOL MATERIAL:\n"
-            f"{tool_result.payload}\n\n"
-            "TOOL INSTRUCTION:\n"
-            f"{tool_result.instruction}\n\n"
-            "Use the tool material to answer the user. "
-            "Treat the tool output as evidence, not as the final wording."
-        )
-
-    return system_prompt
-
-
-def think(user_input: str) -> str:
-    add_to_history("user", user_input)
-    maybe_capture_commitment(user_input)
-
-    tool_reply = handle_tool_request(user_input)
-    if tool_reply is not None:
-        if tool_reply.mode == "direct":
-            add_to_history("assistant", tool_reply.payload)
-            return tool_reply.payload
-
-        reply = generate_reply(_build_system_prompt(user_input, tool_reply), get_history())
-        add_to_history("assistant", reply)
-        maybe_store_memory(user_input, reply)
-        return reply
-
-    reply = generate_reply(_build_system_prompt(user_input), get_history())
-    add_to_history("assistant", reply)
-    maybe_store_memory(user_input, reply)
-    return reply
 
 
 def main():
@@ -67,24 +11,22 @@ def main():
         print(run_self_test())
         return
 
-    checks = run_startup_checks()
-    print(format_startup_report(checks))
-    if not all_checks_passed(checks):
+    ok, report = startup_report()
+    print(report)
+    if not ok:
         print("Voss cannot start until the failed checks are fixed.")
         return
 
     print("Voss is online.")
     speak("Online.")
 
-    for reminder_message in collect_due_reminders():
+    for reminder_message in collect_and_notify_reminders():
         print(f"Voss reminder: {reminder_message}")
-        send_notification("Voss Reminder", reminder_message)
         speak(reminder_message)
 
     while True:
-        for reminder_message in collect_due_reminders():
+        for reminder_message in collect_and_notify_reminders():
             print(f"Voss reminder: {reminder_message}")
-            send_notification("Voss Reminder", reminder_message)
             speak(reminder_message)
 
         user_input = listen()

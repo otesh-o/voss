@@ -76,6 +76,12 @@ def due_reminders_snapshot() -> str:
     return "\n".join(lines)
 
 
+def get_due_reminder_items() -> list[dict]:
+    now = current_local_datetime()
+    due_items = [item for item in list_open_commitments() if _is_due(item, now)]
+    return [dict(item) for item in due_items]
+
+
 def collect_due_reminders() -> list[str]:
     now = current_local_datetime()
     state = _load_state()

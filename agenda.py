@@ -119,6 +119,16 @@ def list_open_commitments() -> list[dict]:
     return [item for item in load_agenda() if item.get("status") != "done"]
 
 
+def get_agenda_items(status: str | None = None, include_done: bool = False) -> list[dict]:
+    items = load_agenda()
+    if not include_done:
+        items = [item for item in items if item.get("status") != "done"]
+    if status:
+        normalized = status.strip().lower()
+        items = [item for item in items if str(item.get("status", "")).lower() == normalized]
+    return [dict(item) for item in items]
+
+
 def agenda_snapshot(limit: int = 8) -> str:
     items = list_open_commitments()
     if not items:

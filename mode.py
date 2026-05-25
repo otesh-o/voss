@@ -47,3 +47,7 @@ def available_modes_snapshot() -> str:
     for name, instruction in MODE_INSTRUCTIONS.items():
         lines.append(f"{name}: {instruction}")
     return "\n".join(lines)
+
+
+def available_modes_data() -> list[dict]:
+    return [{"name": name, "instruction": instruction} for name, instruction in MODE_INSTRUCTIONS.items()]
